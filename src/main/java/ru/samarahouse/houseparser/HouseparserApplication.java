@@ -4,12 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import ru.samarahouse.houseparser.model.House;
-import ru.samarahouse.houseparser.service.GetHouseProject;
-import ru.samarahouse.houseparser.service.GetUrlsFromFile;
-import ru.samarahouse.houseparser.service.SaveImages;
-import ru.samarahouse.houseparser.service.SavePage;
+import ru.samarahouse.houseparser.service.*;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.List;
 
 @SpringBootApplication
@@ -20,9 +18,10 @@ public class HouseparserApplication {
     private final static GetHouseProject getHouseProject = new GetHouseProject();
     private final static GetUrlsFromFile getUrlsFromFile = new GetUrlsFromFile();
     private final static SaveImages saveImages = new SaveImages();
+//  private final static SaveDb saveDb = new SaveDb();
     private static Integer id;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         SpringApplication.run(HouseparserApplication.class, args);
 
 
@@ -30,7 +29,7 @@ public class HouseparserApplication {
         savaPage.savePage(link);
 
         if (id == null) {
-            id = 2;     // заменить на подтягивание из БД
+            id = 1;     // заменить на подтягивание из БД
         } else {
             id++;
         }
@@ -39,6 +38,16 @@ public class HouseparserApplication {
         log.info(house.toString());
         List<String> exteriorPath = saveImages.saveImagesBase(1, house.getId(), house.getExteriorUrls());
         List<String> planPath = saveImages.saveImagesBase(2, house.getId(), house.getPlanUrls());
+
+
+
+//        if (saveDb.addToDb(house)) {
+//            log.info("Запись в БД прошла успешно");
+//        } else {
+//            log.info("Ошибка при записи проекта в БД");
+//
+//        }
+
 
     }
 
