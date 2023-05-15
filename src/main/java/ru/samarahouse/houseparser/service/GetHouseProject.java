@@ -16,7 +16,8 @@ import java.util.Map;
 public class GetHouseProject {
 
     // TODO: 04.03.2023
-    // Сделать через stitch case
+    // Сделать через stitch case парсинг поля хаус
+    // сделать подключение к БД (логи, пароль и т.д.) через app.pro
     //
 
     private String str;

@@ -12,6 +12,7 @@ public class House {
     Integer id;
     @NonNull
     String title;
+    String titleEng;
     String description;
     @NonNull
     Double square;
@@ -25,7 +26,8 @@ public class House {
     Floors floors;
     boolean groundFloor;
     List<String> tags;
+    List<String> features;
     List<String> planUrls;
     List<String> exteriorUrls;
-    List<String> features;
+
 }
