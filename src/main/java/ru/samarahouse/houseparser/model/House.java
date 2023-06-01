@@ -2,6 +2,7 @@ package ru.samarahouse.houseparser.model;
 
 import lombok.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Getter
@@ -24,10 +25,12 @@ public class House {
     Double length; // вглубь участка
     @NonNull
     Floors floors;
-    boolean groundFloor;
+    @Builder.Default
+    boolean groundFloor = false;
     List<String> tags;
     List<String> features;
-    List<String> planUrls;
-    List<String> exteriorUrls;
-
+    LinkedList<String> layoutUrls;  //url, откуда изображение было скачено
+    LinkedList<String> exteriorUrls;
+    LinkedList<String> layoutPath;
+    LinkedList<String> exteriorPath;
 }

@@ -1,4 +1,4 @@
-package ru.samarahouse.houseparser.service;
+package ru.samarahouse.houseparser.service.save;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;

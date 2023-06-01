@@ -1,25 +1,28 @@
 package ru.samarahouse.houseparser.service;
 
 
+import com.ibm.icu.text.Transliterator;
 import lombok.extern.slf4j.Slf4j;
+import ru.samarahouse.houseparser.model.Floors;
 import ru.samarahouse.houseparser.model.House;
+import org.apache.commons.lang3.StringUtils;
+import ru.samarahouse.houseparser.service.save.SaveImages;
+
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
-public class GetHouseProject {
+public class HouseMapper {
 
     // TODO: 04.03.2023
     // Сделать через stitch case парсинг поля хаус
     // сделать подключение к БД (логи, пароль и т.д.) через app.pro
-    //
-
+    // переделать англиское название - просто вытягивать с урла
+    // после сохранения можно сделать СЕЛЕКТ по проектам без этажности, и где на 1+ мансарда всего 1 картинка планировки
+// description у Лесстроя нет
     private String str;
     private StringBuffer stringBuffer;
     private final String fileName = "project.html";
@@ -27,8 +30,13 @@ public class GetHouseProject {
     private final List<String> requiredParameters = new ArrayList<>();
     private final Map<String, String> findParameters = new HashMap<>();
 
+    private SaveImages saveImages = new SaveImages();
+
 
     public House projectMapper(Integer id) {
+        int cout = 0;
+
+
         if (requiredParameters.isEmpty()) setRequiredParameters();
         clearFoundParameters();
         House house = new House();
@@ -37,7 +45,9 @@ public class GetHouseProject {
             BufferedReader in = new BufferedReader(new FileReader(fileName));
             while ((str = in.readLine()) != null) {
                 if (str.contains("<title>")) {
-                    house.setTitle(findName(in));
+                    String title = findName(in);
+                    house.setTitle(title);
+                    house.setTitleEng(transliterator(title));
                 }
                 if (str.contains("Общая площадь")) {
                     Double s = Double.valueOf(findSquare(in));
@@ -53,7 +63,7 @@ public class GetHouseProject {
                     house.setLength(Double.valueOf(sizes.get(1)));
                 }
              /*
-              // старый номер проекта
+              // старый номер проекта, решили пока не надо
               if (str.contains("Номер проекта")) {
                     Integer oldId = findOldId(in);
                     house.setOldId(oldId);
@@ -63,21 +73,39 @@ public class GetHouseProject {
                     house.setTags(findTags(in));
                 }
                 if (str.contains("Планировка")) {
-                    house.setPlanUrls(findPlanImagesUrls(in));
+                    house.setLayoutUrls(findPlanImagesUrls(in));
                 }
-                if (str.contains("<div class=\"swiper-container gallery-slider\">")) { //картинки дома
+                if (str.contains("<swiper-wrapper gallery-swiper-wrapper")) { //картинки дома
                     house.setExteriorUrls(findHouseImagesUrls(in));
+                    cout++;
+                    log.info("вызвали метод findHouseImagesUrls "+ cout + "раз");
+
                 }
 
                 if (str.contains("Особенности проекта")) {
-                    house.setFeatures(findFeatures(in));
+                    List<String> features = findFeatures(in);
+                    house.setFeatures(features);
+                    //здесь же вытягиваем этажность
+                    if (features.contains("С мансардой")) {
+                        house.setFloors(Floors.ONEPLUSMANSARD);
+                    } else if (features.contains("Одноэтажный")) {
+                        house.setFloors(Floors.ONE);
+                    } else if (features.contains("Двухэтажный")) {
+                        house.setFloors(Floors.TWO);
+                    } else if (features.contains("Трехэтажный")) {
+                        house.setFloors(Floors.THERE);
+                    }
+                    // и наличие цоколя
+                    if (features.contains("С цокольным этажом")) {
+                        house.setGroundFloor(true);
+                    }
                 }
-
             }
             in.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        house = saveImages.saveListsImages(house);
         return house;
     }
 
@@ -107,7 +135,9 @@ public class GetHouseProject {
         str = in.readLine();
         str = in.readLine();
         String[] l = str.split(" "); //читаем до пробела
+        log.info("Массив с размерами " + l.toString());
         Integer a = Integer.parseInt(l[0]);
+
         String stringB = l[1].substring(1);
         Integer b = Integer.parseInt(stringB);
         sizes.add(a);
@@ -144,8 +174,8 @@ public class GetHouseProject {
         return tags;
     }
 
-    private List<String> findPlanImagesUrls(BufferedReader in) throws IOException {
-        List<String> foundPlanImagesUrls = new ArrayList<>();
+    private LinkedList<String> findPlanImagesUrls(BufferedReader in) throws IOException {
+        LinkedList<String> foundPlanImagesUrls = new LinkedList<>();
         str = in.readLine();
         while (!str.contains("Построенные объекты")) {
             str = in.readLine();
@@ -154,6 +184,7 @@ public class GetHouseProject {
                 String url = stringWithTag[1].trim();
                 foundPlanImagesUrls.add(url);
             }
+            log.info("Размер листа с планировками после мапинга равен " + foundPlanImagesUrls.size());
         }
 
 
@@ -161,8 +192,8 @@ public class GetHouseProject {
 
     }
 
-    private List<String> findHouseImagesUrls(BufferedReader in) throws IOException {
-        List<String> houseImagesUrls = new ArrayList<>();
+    private LinkedList<String> findHouseImagesUrls(BufferedReader in) throws IOException {
+        LinkedList<String> houseImagesUrls = new LinkedList<>();
         str = in.readLine();
         while (!str.contains("project-item-like hidden-print")) {
             str = in.readLine();
@@ -172,6 +203,7 @@ public class GetHouseProject {
                 houseImagesUrls.add(url);
             }
         }
+        log.info("Размер листа с планировками после мапинга равен " + houseImagesUrls.size());
         return houseImagesUrls;
     }
 
@@ -189,7 +221,7 @@ public class GetHouseProject {
                 features.add(fiature);
             }
         }
-         return features;
+        return features;
     }
 
     private void setRequiredParameters() {
@@ -201,5 +233,11 @@ public class GetHouseProject {
         for (String i : requiredParameters) {
             findParameters.put(i, null);
         }
+    }
+
+    public String transliterator(String rusText) {
+        Transliterator transliterator = Transliterator.getInstance("Russian-Latin/BGN");
+        String engText = transliterator.transliterate(rusText);
+        return StringUtils.stripAccents(engText);
     }
 }
