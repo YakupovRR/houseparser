@@ -25,60 +25,6 @@ public class HouseDb {
 
     public void saveProjectDb(House house) throws SQLException {
 
-
-        //начало тестовой части
-       /*
-        House house = new House();
-        List<String> testTags = new ArrayList<>();
-        List<String> testFeatures = new ArrayList<>();
-        LinkedList<String> testLayoutPath = new LinkedList<>();
-        LinkedList<String> testExteriorPath = new LinkedList<>();
-
-        testTags.add("тег 1");
-        testTags.add("тег 2");
-        testFeatures.add("фича 1");
-        testFeatures.add("фича 2");
-
-        house.setId(getLastProjectId() + 1);
-        house.setTitle("Пробный");
-        house.setTitleEng("Proba");
-        house.setDescription("Описание");
-        house.setSquare(100.2);
-        house.setRooms(4);
-        house.setWidth(10.12);
-        house.setLength(10.0);
-        house.setFloors(Floors.ONEPLUSMANSARD);
-        house.setTags(testTags);
-        house.setFeatures(testFeatures);
-        house.setGroundFloor(true);
-
-
-        testExteriorPath.add(house.getId() + "/" + house.getTitleEng() + "_exterior_1");
-        testExteriorPath.add(house.getId() + "/" + house.getTitleEng() + "/_exterior_2");
-        testExteriorPath.add(house.getId() + "/" + house.getTitleEng() + "/_exterior_3");
-
-        testLayoutPath.add(house.getId() + "/" + house.getTitleEng() + "/_layout_1");
-        testLayoutPath.add(house.getId() + "/" + house.getTitleEng() + "/_layout_2");
-        testLayoutPath.add(house.getId() + "/" + house.getTitleEng() + "/_layout_3");
-        // testLayoutPath.add(house.getTitleEng() + "/4_layout_4");
-
-        try {
-            log.info("Размер листа экстерьеров " + testExteriorPath.size());
-            house.setExteriorPath(testExteriorPath);
-        } catch (NullPointerException e) {
-            log.info("Не удалось записать лист этажей в проект дома, возможно он null");
-        }
-
-        try {
-            log.info("Размер листа этажей " + testLayoutPath.size());
-            house.setLayoutPath(testLayoutPath);
-        } catch (NullPointerException e) {
-            log.info("Не удалось записать лист этажей в проект дома, возможно он null");
-        }
-*/
-        // конец тестовой части
-
-
         String sqlHouse = "INSERT INTO schema.project (projectId, title, titleeng, description, square, rooms, width," +
                 " length, floors, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlExterior = "INSERT INTO schema.exterior (projectId, path, base) VALUES (?, ?, ?)";
@@ -110,7 +56,6 @@ public class HouseDb {
             statementHouse.setString(10, String.valueOf(house.getFeatures()));
             statementHouse.executeUpdate();
 
-
             // Запись в БД экстерьеров
             try {
                 boolean isBaseExterior = true;   // предполагается, что основная картинка идет первой
@@ -130,7 +75,7 @@ public class HouseDb {
             try {
                 int additionalImages = 0;
                 if (house.isGroundFloor()) additionalImages = additionalImages++;
-//эксплуатируемая кровля не учитывается, т.к. обычно правило сохранена криво на сайте-источнике
+//эксплуатируемая кровля не учитывается, т.к. обычно сохранена криво на сайте-источнике
                 if (isCorrectLengthListLayout(house, additionalImages)) {
                     for (int i = 0; i < (house.getLayoutPath().size() - additionalImages); i++) {
                         statementLayout.setInt(1, house.getId());
@@ -158,21 +103,16 @@ public class HouseDb {
                 log.warn("Проект id " + house.getId() + " - не удалось записать лист этажей в БД, возможно он null");
             }
 
-
             // запись в БД тэгов
-
-
             List<Integer> tagsId = new ArrayList<>();
             try {
                 for (String i : house.getTags()) {
                     statementTags.setString(1, i);
                     ResultSet rs = statementTags.executeQuery();
                     if (rs.next()) {
-                        // Получаем значение tagid из результата запроса
                         int tagId = rs.getInt("tagid");
                         tagsId.add(tagId);
                     } else {
-                        // Если в таблице не было записи с таким тегом и она была успешно добавлена
                         rs = statementTags.getGeneratedKeys();
                         if (rs.next()) {
                             int tagId = rs.getInt(1);
@@ -185,6 +125,7 @@ public class HouseDb {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+
 // запись в БД пары проект/тэг
             try {
                 for (int j : tagsId) {

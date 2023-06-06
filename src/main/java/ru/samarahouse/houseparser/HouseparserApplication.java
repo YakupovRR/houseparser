@@ -28,12 +28,12 @@ public class HouseparserApplication {
     public static void main(String[] args) throws Exception {
         SpringApplication.run(HouseparserApplication.class, args);
 
+        // TODO: сделать подключение к БД (логи, пароль и т.д.) через app.pro
+        // TODO: сделать маппер интерфейсом, добавить имплементацию ручного добавления
+
 
         id = houseDb.getLastProjectId() + 1;
         ArrayList<String> links = getUrlsFromFile.getUrls();
-
-        //  String iii = "https://lesstroy63.ru/proekty/maksim/";
-
 
         try {
             for (String i : links) {
@@ -52,7 +52,7 @@ public class HouseparserApplication {
                 id++;
             }
         } catch (NullPointerException e) {
-            log.info("Парсинг не начался, возможно лист url пуст");
+            log.info("Лист url пуст или закончился");
         }
         log.info("Закончили парсинг списка");
     }
