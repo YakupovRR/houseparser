@@ -117,38 +117,47 @@ public class HouseMapper {
     }
 
     private Integer findRooms(BufferedReader in) throws IOException {
-        str = in.readLine();
-        str = in.readLine();
-        String[] l = str.split(" ");
-        return Integer.parseInt(l[0]);
+        Integer rooms = -1;  //т.к. все что свыше 6 идет как "6+"
 
-
-        /*
-        Exception in thread "main" java.lang.NumberFormatException: For input string: "6+"
-	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
-
-         */
+        try {
+            str = in.readLine();
+            str = in.readLine();
+            String[] l = str.split(" ");
+            rooms = Integer.parseInt(l[0]);
+        } catch (NumberFormatException e) {
+            log.warn("Не удалось считать количество комнат из файла");
+        }
+        return rooms;
     }
 
     private Integer findSquare(BufferedReader in) throws IOException {
-        str = in.readLine();
-        str = in.readLine();
-        String[] l = str.split(" "); //читаем до пробела
-        return Integer.parseInt(l[0]);
+        Integer square = -1;
+        try {
+            str = in.readLine();
+            str = in.readLine();
+            String[] l = str.split(" "); //читаем до пробела
+            square = Integer.parseInt(l[0]);
+        } catch (NumberFormatException e) {
+            log.info("Не удалось считать площадь из файла");
+        }
+        return square;
     }
 
     private List<Integer> findSizes(BufferedReader in) throws IOException {
         List<Integer> sizes = new ArrayList<>();
-        str = in.readLine();
-        str = in.readLine();
-        String[] l = str.split(" "); //читаем до пробела
-        log.info("Массив с размерами " + l.toString());
-        Integer a = Integer.parseInt(l[0]);
 
-        String stringB = l[1].substring(1);
-        Integer b = Integer.parseInt(stringB);
-        sizes.add(a);
-        sizes.add(b);
+        try {
+            str = in.readLine();
+            str = in.readLine();
+            String[] l = str.split(" "); //читаем до пробела
+            Integer a = Integer.parseInt(l[0]);
+            String stringB = l[1].substring(1);
+            Integer b = Integer.parseInt(stringB);
+            sizes.add(a);
+            sizes.add(b);
+        } catch (NumberFormatException e) {
+            log.warn("Не удалось считать количество размеры из файла");
+        }
         return sizes;
     }
 
@@ -162,21 +171,29 @@ public class HouseMapper {
     private List<String> findTags(BufferedReader in) throws IOException {
         List<String> tags = new ArrayList<>();
         str = in.readLine();
-        String[] stringWithMainTag = str.split("</a>");
-        String mainTag = stringWithMainTag[0].trim();         //он в дивах, поэтому отдельно
-        tags.add(mainTag);
+        try {
+            String[] stringWithMainTag = str.split("</a>");
+            String mainTag = stringWithMainTag[0].trim();         //он в дивах, поэтому отдельно
+            tags.add(mainTag);
+        } catch (NumberFormatException e) {
+            log.warn("Не удалось считать главный тэг из файла");
+        }
         str = in.readLine();
         str = in.readLine();
         str = in.readLine();
         str = in.readLine();
-        while (!str.contains("</div>")) {
-            str = in.readLine();
-            String firsChar = String.valueOf(str.charAt(0));
-            if (!firsChar.equals("<") && !(firsChar.equals(" "))) {
-                String[] stringWithTag = str.split("</span>");
-                String tag = stringWithTag[0].trim();
-                tags.add(tag);
+        try {
+            while (!str.contains("</div>")) {
+                str = in.readLine();
+                String firsChar = String.valueOf(str.charAt(0));
+                if (!firsChar.equals("<") && !(firsChar.equals(" "))) {
+                    String[] stringWithTag = str.split("</span>");
+                    String tag = stringWithTag[0].trim();
+                    tags.add(tag);
+                }
             }
+        } catch (NumberFormatException e) {
+            log.warn("Не удалось считать тэги из файла");
         }
         return tags;
     }
@@ -187,13 +204,16 @@ public class HouseMapper {
         while (!str.contains("Построенные объекты")) {
             str = in.readLine();
             if (str.contains("href")) {
-                String[] stringWithTag = str.split("\"");
-                String url = stringWithTag[1].trim();
-                foundPlanImagesUrls.add(url);
+                try {
+                    String[] stringWithTag = str.split("\"");
+                    String url = stringWithTag[1].trim();
+                    foundPlanImagesUrls.add(url);
+                } catch (NumberFormatException e) {
+                    log.warn("Не удалось считать url планировок из файла");
+                }
             }
         }
         return foundPlanImagesUrls;
-
     }
 
     private LinkedList<String> findExteriorUrls(BufferedReader in) throws IOException {
@@ -202,12 +222,15 @@ public class HouseMapper {
         while (!str.contains("project-item-like hidden-print")) {
             str = in.readLine();
             if (str.contains("href")) {
-                String[] stringWithTag = str.split("\"");
-                String url = stringWithTag[1].trim();
-                houseImagesUrls.add(url);
+                try {
+                    String[] stringWithTag = str.split("\"");
+                    String url = stringWithTag[1].trim();
+                    houseImagesUrls.add(url);
+                } catch (NumberFormatException e) {
+                    log.warn("Не удалось считать url экстерьеров из файла");
+                }
             }
         }
-        log.info("Размер листа с экстерьерами после мапинга равен " + houseImagesUrls.size());
         return houseImagesUrls;
     }
 
@@ -219,10 +242,14 @@ public class HouseMapper {
         while (!str.contains("</ul>")) {
             str = in.readLine();
             String firsChar = String.valueOf(str.charAt(0));
-            if (!firsChar.equals("<") && !(firsChar.equals(" "))) {
-                String[] stringWithFiature = str.split("</li>");
-                String fiature = stringWithFiature[0].trim();
-                features.add(fiature);
+            try {
+                if (!firsChar.equals("<") && !(firsChar.equals(" "))) {
+                    String[] stringWithFiature = str.split("</li>");
+                    String fiature = stringWithFiature[0].trim();
+                    features.add(fiature);
+                }
+            } catch (NumberFormatException e) {
+                log.warn("Не удалось считать фичи из файла");
             }
         }
         return features;
@@ -239,9 +266,22 @@ public class HouseMapper {
         }
     }
 
-    public String transliterator(String rusText) {
+    //Получение titleEng через транслитерацию
+    private String transliterator(String rusText) {
         Transliterator transliterator = Transliterator.getInstance("Russian-Latin/BGN");
         String engText = transliterator.transliterate(rusText);
         return StringUtils.stripAccents(engText);
     }
+
+
+    public String getTitleEngFromUrl(String url) {
+        String titleEng = null;
+        try {
+            String[] partsUrl = url.split("/");
+            titleEng = partsUrl[4];
+        } catch (ArrayIndexOutOfBoundsException e) {
+        }
+        return titleEng;
+    }
+
 }

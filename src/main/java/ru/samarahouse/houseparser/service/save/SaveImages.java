@@ -85,18 +85,14 @@ public class SaveImages {
 
     private static void addDir(File dir) {
         if (!dir.exists()) {
-            if (dir.mkdirs()) {
-                log.info("Kaтaлoг " + dir.getAbsolutePath()
-                        + " ycпeшнo coздaн.");
-            } else {
-                log.info("Kaтaлoг " + dir.getAbsolutePath()
+            if (!dir.mkdirs()) {
+                log.warn("Kaтaлoг " + dir.getAbsolutePath()
                         + " coздать нe yдaлocь.");
             }
         } else {
             log.info("Kaтaлoг " + dir.getAbsolutePath()
                     + " yжe cyщecтвyeт.");
         }
-
     }
 
     private static void downloadImage(String pathname, String url) {
@@ -108,5 +104,4 @@ public class SaveImages {
             log.info("Не удалось скачать картинку с url " + url);
         }
     }
-
 }

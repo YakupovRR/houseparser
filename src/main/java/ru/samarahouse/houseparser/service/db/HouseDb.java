@@ -80,10 +80,11 @@ public class HouseDb {
 
 
         String sqlHouse = "INSERT INTO schema.project (projectId, title, titleeng, description, square, rooms, width," +
-                " length, floors, features, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " length, floors, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlExterior = "INSERT INTO schema.exterior (projectId, path, base) VALUES (?, ?, ?)";
         String sqlLayout = "INSERT INTO schema.layout (projectId, path, floor) VALUES (?, ?, ?)";
-        String sqlTags = "INSERT INTO schema.tag (tagtext) VALUES (?) ON CONFLICT DO NOTHING RETURNING tagid;";
+        String sqlTags = "INSERT INTO schema.tag (tagtext) VALUES (?) ON CONFLICT (tagtext) DO UPDATE SET tagtext" +
+                " = excluded.tagtext RETURNING tagid";
         String sqlProjectAndTag = "INSERT INTO schema.project_tag (projectId, tagId) VALUES (?, ?)";
 
 
@@ -93,6 +94,7 @@ public class HouseDb {
              PreparedStatement statementLayout = connection.prepareStatement(sqlLayout);
              PreparedStatement statementTags = connection.prepareStatement(sqlTags);
              PreparedStatement statementProjectAndTag = connection.prepareStatement(sqlProjectAndTag);
+
         ) {
 
             //Запись в БД самого проекта
@@ -106,8 +108,6 @@ public class HouseDb {
             statementHouse.setDouble(8, house.getLength());
             statementHouse.setString(9, String.valueOf(house.getFloors()));
             statementHouse.setString(10, String.valueOf(house.getFeatures()));
-            statementHouse.setString(11, String.valueOf(house.getTags()));
-
             statementHouse.executeUpdate();
 
 
@@ -132,7 +132,6 @@ public class HouseDb {
                 if (house.isGroundFloor()) additionalImages = additionalImages++;
 //эксплуатируемая кровля не учитывается, т.к. обычно правило сохранена криво на сайте-источнике
                 if (isCorrectLengthListLayout(house, additionalImages)) {
-                    log.info("Количество картинок в листе планировок корректно");
                     for (int i = 0; i < (house.getLayoutPath().size() - additionalImages); i++) {
                         statementLayout.setInt(1, house.getId());
                         statementLayout.setString(2, house.getLayoutPath().get(i));
@@ -148,7 +147,6 @@ public class HouseDb {
                         statementLayout.executeUpdate();
                     }
                 } else {
-                    log.warn("Количество картинок в листе НЕ корректно");
                     for (int i = 0; i < house.getLayoutPath().size(); i++) {
                         statementLayout.setInt(1, house.getId());
                         statementLayout.setString(2, house.getLayoutPath().get(i));
@@ -162,6 +160,8 @@ public class HouseDb {
 
 
             // запись в БД тэгов
+
+
             List<Integer> tagsId = new ArrayList<>();
             try {
                 for (String i : house.getTags()) {
@@ -184,15 +184,11 @@ public class HouseDb {
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
-            } finally {
-                if (statementTags != null) {
-                    statementTags.close();
-                }
             }
-
-            // запись в БД пары проект/тэг
+// запись в БД пары проект/тэг
             try {
                 for (int j : tagsId) {
+                    statementProjectAndTag.clearParameters(); // очищаем параметры запроса перед повторным использованием
                     statementProjectAndTag.setInt(1, house.getId());
                     statementProjectAndTag.setInt(2, j);
                     statementProjectAndTag.executeUpdate();
@@ -200,8 +196,11 @@ public class HouseDb {
             } catch (NullPointerException e) {
                 log.warn("Проект id " + house.getId() + " Не удалось записать связующий лист проект/тэги");
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
+
 
     public Integer getLastProjectId() throws SQLException {
         Integer lastProjectId = 0;

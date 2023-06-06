@@ -26,11 +26,6 @@ public class House {
     LinkedList<String> layoutPath;
     LinkedList<String> exteriorPath;
     //тэги, которые могут повлиять на кол-во картинок или что-то ещё
-
-
-    /*
-    вынести все тэги в отдельную таблицу, сделать связи
-     */
     @Builder.Default
     boolean groundFloor = false;
     @Builder.Default

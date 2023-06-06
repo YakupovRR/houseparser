@@ -26,14 +26,9 @@ public class SavePage {
         WebClient webClient = createWebClient();
         File file = new File(fileName);
 //удаляем старый файл
-        Path path = Paths.get(fileName +  fileFormat);
+        Path path = Paths.get(fileName + fileFormat);
         try {
-            boolean result = Files.deleteIfExists(path);
-            if (result) {
-                log.info("Файл старого проекта удалён.");
-            } else {
-                log.info("Ошибка удаления файла старого проекта.");
-            }
+            Files.deleteIfExists(path);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,8 +36,6 @@ public class SavePage {
         //удаляем старую папку
         try {
             FileUtils.deleteDirectory(new File(fileName));
-            log.info("Папка старого проекта удалена.");
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -51,7 +44,6 @@ public class SavePage {
         try {
             HtmlPage page = webClient.getPage(link);
             page.save(file);
-            log.info("сохранили страницу проекта " + page.getTitleText());
         } catch (FailingHttpStatusCodeException | IOException e) {
             e.printStackTrace();
         } finally {

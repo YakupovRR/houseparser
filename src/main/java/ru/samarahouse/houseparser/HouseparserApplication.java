@@ -32,26 +32,28 @@ public class HouseparserApplication {
         id = houseDb.getLastProjectId() + 1;
         ArrayList<String> links = getUrlsFromFile.getUrls();
 
-        //String i = "https://lesstroy63.ru/proekty/maksim/";
+        //  String iii = "https://lesstroy63.ru/proekty/maksim/";
+
 
         try {
             for (String i : links) {
-                log.info("Начинаем парсинг проекта по адресу" + i);
+                log.info("Начинаем парсинг проекта по адресу " + i);
                 savaPage.savePage(i);
                 House house = houseMapper.projectMapper(id);
+                //заплатка, когда нормально прописаны url и лучше вытянуть английское название оттуда
+                try {
+                    house.setTitleEng(houseMapper.getTitleEngFromUrl(i));
+                } catch (NullPointerException e) {
+                }
+
                 house = saveImages.saveListsImages(house);
                 log.info("Дом перед сохранением в БД " + house.toString());
                 houseDb.saveProjectDb(house);
-                id ++;
+                id++;
             }
         } catch (NullPointerException e) {
             log.info("Парсинг не начался, возможно лист url пуст");
         }
+        log.info("Закончили парсинг списка");
     }
-
-    /*
-    Неправильно кажется сохраняет лист проекты/тэги в БД
-     */
-
-
 }
