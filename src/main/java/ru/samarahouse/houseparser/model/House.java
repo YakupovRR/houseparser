@@ -9,28 +9,31 @@ import java.util.List;
 @Setter
 @ToString
 public class House {
-    @NonNull
     Integer id;
-    @NonNull
     String title;
     String titleEng;
     String description;
-    @NonNull
     Double square;
-    @NonNull
     Integer rooms;
-    @NonNull
     Double width;
-    @NonNull
     Double length; // вглубь участка
-    @NonNull
     Floors floors;
-    @Builder.Default
-    boolean groundFloor = false;
     List<String> tags;
+    List<String> tagsId;
     List<String> features;
     LinkedList<String> layoutUrls;  //url, откуда изображение было скачено
     LinkedList<String> exteriorUrls;
     LinkedList<String> layoutPath;
     LinkedList<String> exteriorPath;
+    //тэги, которые могут повлиять на кол-во картинок или что-то ещё
+
+
+    /*
+    вынести все тэги в отдельную таблицу, сделать связи
+     */
+    @Builder.Default
+    boolean groundFloor = false;
+    @Builder.Default
+    boolean operatedRoof = false;
+
 }

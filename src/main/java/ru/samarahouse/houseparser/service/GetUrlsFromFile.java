@@ -5,13 +5,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GetUrlsFromFile {
     private static final File file = new File("url.csv");
 
-    public static List<String> getUrls() throws IOException {
-        List<String> urls = new ArrayList();
+    public static ArrayList<String> getUrls() throws IOException {
+        ArrayList<String> urls = new ArrayList();
 
         BufferedReader csvReader = new BufferedReader(new FileReader(file));
         String row;
@@ -19,9 +20,6 @@ public class GetUrlsFromFile {
             urls.add(row);
         }
         csvReader.close();
-        System.out.println("Получили список url размером " + urls.size());
-        System.out.println("Первая " + urls.get(0));
-        System.out.println("Последняя " + urls.get((urls.size() - 1)));
         return urls;
     }
 

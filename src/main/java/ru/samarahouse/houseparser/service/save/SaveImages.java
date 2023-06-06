@@ -33,16 +33,20 @@ public class SaveImages {
     private static final String fileFormat = ".jpg";
 
 
+    private static final String baseUrl = "https://lesstroy63.ru/";
+    //ToDo как-то надо сделать изменяемым
+
     public static House saveListsImages(House house) {
         Integer idProject = house.getId();
         house.setExteriorPath(saveImagesBase(1, idProject, house.getExteriorUrls(), house.getTitleEng()));
-        house.setExteriorPath(saveImagesBase(2, idProject, house.getExteriorUrls(), house.getTitleEng()));
+        house.setLayoutPath(saveImagesBase(2, idProject, house.getLayoutUrls(), house.getTitleEng()));
         return house;
     }
 
 
     public static LinkedList<String> saveImagesBase(int typeOfImage, Integer idProject, LinkedList<String> urls,
                                                     String titleEng) { //typeOfImage - 1-exterior, 2-layout
+
 
         LinkedList<String> baseRelativePathnameImages = new LinkedList<>();
         String relativePath = null;
@@ -63,24 +67,20 @@ public class SaveImages {
         final File dir = new File(pathname);
         addDir(dir);
 
-        try {
-            for (int i = 0; i < urls.size() && i < secondPartName.length; i++) {
-                String imageName = titleEng + "_" + firstPartName + secondPartName[i]
-                        + fileFormat;
-                String pathnameImage = pathname + "/" + imageName;
-                String relativePathnameImage = relativePath + "/" + imageName;
-                String url = urls.get(i);
-                downloadImage(pathnameImage, url);
-                baseRelativePathnameImages.add(relativePathnameImage);
-            }
-        } catch (NullPointerException e) {
-            log.info("Скачать лист картинок тип + " +  typeOfImage + "не удалось. Возможно лист урлов пустой" );
+
+        for (int i = 0; i < urls.size() && i < secondPartName.length; i++) {
+            String imageName = titleEng + "_" + firstPartName + secondPartName[i]
+                    + fileFormat;
+            String pathnameImage = pathname + "/" + imageName;
+            String relativePathnameImage = relativePath + "/" + imageName;
+            String url = urls.get(i);
+            downloadImage(pathnameImage, url);
+            baseRelativePathnameImages.add(relativePathnameImage);
         }
+
         return baseRelativePathnameImages;
 
     }
-
-
 
 
     private static void addDir(File dir) {
@@ -100,9 +100,12 @@ public class SaveImages {
     }
 
     private static void downloadImage(String pathname, String url) {
+        url = baseUrl + url;
+
         try (InputStream in = new URL(url).openStream()) {
             Files.copy(in, Paths.get(pathname));
         } catch (IOException e) {
+            log.info("Не удалось скачать картинку с url " + url);
         }
     }
 

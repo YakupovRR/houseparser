@@ -10,15 +10,17 @@ import ru.samarahouse.houseparser.service.db.HouseDb;
 import ru.samarahouse.houseparser.service.save.SaveImages;
 import ru.samarahouse.houseparser.service.save.SavePage;
 
+import java.util.ArrayList;
+
 @SpringBootApplication
 @Slf4j
 @Service
 public class HouseparserApplication {
 
-    private final static SavePage savaPage = new SavePage();
+    private static SavePage savaPage = new SavePage();
     private static HouseMapper houseMapper = new HouseMapper();
-    private final static GetUrlsFromFile getUrlsFromFile = new GetUrlsFromFile();
-    private final static SaveImages saveImages = new SaveImages();
+    private static GetUrlsFromFile getUrlsFromFile = new GetUrlsFromFile();
+    private static SaveImages saveImages = new SaveImages();
     private static Integer id;
     private static HouseDb houseDb = new HouseDb();
 
@@ -27,30 +29,29 @@ public class HouseparserApplication {
         SpringApplication.run(HouseparserApplication.class, args);
 
 
-        Integer id = houseDb.getLastProjectId() + 1;
-        String link = "https://lesstroy63.ru/proekty/maksim/";
-        savaPage.savePage(link);
-        House house = houseMapper.projectMapper(id);
-        houseDb.saveProjectDb(house);
+        id = houseDb.getLastProjectId() + 1;
+        ArrayList<String> links = getUrlsFromFile.getUrls();
 
+        //String i = "https://lesstroy63.ru/proekty/maksim/";
 
-
-
-        // log.info(house.toString());
-        /*
-        List<String> exteriorPath = saveImages.saveImagesBase(1, house.getId(), house.getExteriorUrls());
-        List<String> planPath = saveImages.saveImagesBase(2, house.getId(), house.getPlanUrls());
-
-
-
-        if (saveDb.addToDb(house)) {
-            log.info("Запись в БД прошла успешно");
-        } else {
-            log.info("Ошибка при записи проекта в БД");
-
+        try {
+            for (String i : links) {
+                log.info("Начинаем парсинг проекта по адресу" + i);
+                savaPage.savePage(i);
+                House house = houseMapper.projectMapper(id);
+                house = saveImages.saveListsImages(house);
+                log.info("Дом перед сохранением в БД " + house.toString());
+                houseDb.saveProjectDb(house);
+                id ++;
+            }
+        } catch (NullPointerException e) {
+            log.info("Парсинг не начался, возможно лист url пуст");
         }
-*/
-
     }
+
+    /*
+    Неправильно кажется сохраняет лист проекты/тэги в БД
+     */
+
 
 }
