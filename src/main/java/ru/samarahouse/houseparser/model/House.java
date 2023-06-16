@@ -23,12 +23,16 @@ public class House {
     List<String> features;
     LinkedList<String> layoutUrls;  //url, откуда изображение было скачено
     LinkedList<String> exteriorUrls;
+    LinkedList<String> unsortedImagesUrls;
     LinkedList<String> layoutPath;
     LinkedList<String> exteriorPath;
+    LinkedList<String> unsortedImagesPath;
     //тэги, которые могут повлиять на кол-во картинок или что-то ещё
     @Builder.Default
     boolean groundFloor = false;
     @Builder.Default
     boolean operatedRoof = false;
+    String urlSource; // откуда скачен
+
 
 }

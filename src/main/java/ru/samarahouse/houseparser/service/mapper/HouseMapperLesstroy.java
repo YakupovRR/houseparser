@@ -1,4 +1,4 @@
-package ru.samarahouse.houseparser.service;
+package ru.samarahouse.houseparser.service.mapper;
 
 
 import com.ibm.icu.text.Transliterator;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Slf4j
-public class HouseMapper {
+public class HouseMapperLesstroy implements HouseMapper {
 
 
     // description у Лесстроя нет
@@ -25,39 +25,57 @@ public class HouseMapper {
     private boolean flagRooms = true;
     private boolean flagWidthAndLength = true;
     private boolean flagTags = true;
+    private boolean flagLayoutUrls = true;
+    private boolean flagExteriorUrls = true;
+    private boolean flagFeatures = true;
+
+    private final String startTitle = "<title>";
+    private final String startSquare = "Общая площадь";
+    private final String startRooms = "Жилых комнат";
+
+    private final String startSizes = "Габариты";
+
+    private final String startTags = "Категория:";
+
+    private final String startLayoutUrls = "plains-list-box";
+
+    private final String startExteriorUrls = "swiper-container gallery-slider";
+
+    private final String startFeatures = "Особенности проекта";
 
 
-    public House projectMapper(Integer id) {
+    public House projectMapper(Integer id, String url) {
         House house = new House();
         house.setId(id);
+        house.setUrlSource(url);
+        house.setTitleEng(getTitleEngFromUrl(url));
         try {
             BufferedReader in = new BufferedReader(new FileReader(fileName));
             while ((str = in.readLine()) != null) {
-                if (flagTitle && str.contains("<title>")) {
+                if (flagTitle && str.contains(startTitle)) {
                     String title = findName(in);
                     house.setTitle(title);
-                    house.setTitleEng(transliterator(title));
                     flagTitle = false;
                 }
-                if (flagSquare && str.contains("Общая площадь")) {
+                if (flagSquare && str.contains(startSquare)) {
                     Double s = Double.valueOf(findSquare(in));
                     house.setSquare(s);
                     flagSquare = false;
 
                 }
-                if (flagRooms && str.contains("Жилых комнат")) {
+                if (flagRooms && str.contains(startRooms)) {
                     Integer rooms = findRooms(in);
                     house.setRooms(rooms);
                     flagRooms = false;
                 }
-                if (flagWidthAndLength && str.contains("Габариты")) {
+                if (flagWidthAndLength && str.contains(startSizes)) {
                     List<Integer> sizes = findSizes(in);
                     house.setWidth(Double.valueOf(sizes.get(0)));
                     house.setLength(Double.valueOf(sizes.get(1)));
                     flagWidthAndLength = false;
                 }
 
-                if (flagTags && str.contains("Категория:")) {
+                if (flagTags && str.contains(startTags)) {
                     flagTags = false;
                     List<String> tags = findTags(in);
                     house.setTags(tags);
@@ -76,13 +94,16 @@ public class HouseMapper {
                         house.setGroundFloor(true);
                     }
                 }
-                if (str.contains("plains-list-box")) {
+
+                if (flagLayoutUrls && str.contains(startLayoutUrls)) {
                     house.setLayoutUrls(findPlanImagesUrls(in));
+                    flagLayoutUrls = false;
                 }
-                if (str.contains("swiper-container gallery-slider")) { //картинки экстерьера дома
+                if (flagExteriorUrls && str.contains(startExteriorUrls)) { //картинки экстерьера дома
                     house.setExteriorUrls(findExteriorUrls(in));
+                    flagExteriorUrls = false;
                 }
-                if (str.contains("Особенности проекта")) {
+                if (flagFeatures && str.contains(startFeatures)) {
                     house.setFeatures(findFeatures(in));
                 }
             }
@@ -100,6 +121,9 @@ public class HouseMapper {
         flagRooms = true;
         flagWidthAndLength = true;
         flagTags = true;
+        flagLayoutUrls = true;
+        flagExteriorUrls = true;
+        flagFeatures = true;
     }
 
     private String findName(BufferedReader in) throws IOException {
@@ -111,8 +135,20 @@ public class HouseMapper {
             name = name.trim();
             name = name.replace("\"", "");
         } catch (ArrayIndexOutOfBoundsException e) {
-            log.info("Ошибку при поиске имени");
+            log.info("Ошибка при поиске имени");
         }
+        if (name.length() > 40) {
+            try {
+                String[] ll = str.split(" ");
+                name = ll[2];
+                name = name.replace("\"", "");
+                name = name.replace("«", "");
+                name = name.replace("»", "");
+            } catch (ArrayIndexOutOfBoundsException e) {
+                log.info("Ошибка при подрезании имени");
+            }
+        }
+
         return name;
     }
 
@@ -248,7 +284,7 @@ public class HouseMapper {
         return features;
     }
 
-    //Получение titleEng через транслитерацию
+    //Получение titleEng через транслитерацию (запасной вариант)
     private String transliterator(String rusText) {
         Transliterator transliterator = Transliterator.getInstance("Russian-Latin/BGN");
         String engText = transliterator.transliterate(rusText);
